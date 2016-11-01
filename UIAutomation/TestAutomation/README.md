@@ -1,0 +1,2 @@
+这个是UIAutomation的例子
+依赖XCode8之前的Instrument的Automation插件

@@ -1,0 +1,112 @@
+
+UI自动化测试大纲：
+1.Apple提供的UITest
+2.UIAutomation
+3.specta  expecta
+
+
+0.测试框架选型
+http://blog.csdn.net/colorapp/article/details/47007431
+
+Specta (BDD框架)行为驱动开发（英语：Behavior-driven development，缩写BDD）
+Expecta(断言框架)
+CMock(mock框架)
+OHHTTPStubs(http stub框架)
+KIF(UI Test) 
+
+
+1.系统的UITest
+
+1> 支持OC/Swift苹果原生语法
+2> 支持屏幕行为录制
+3> 寻找层级依赖Accessibility属性，得到的都是XCUITestElement，UI控件的代理类，不能直接获取控件属性。
+4> appium 1.6beta版本对其有支持
+
+
+[参考文章](https://onevcat.com/2015/09/ui-testing/)
+[git地址](https://github.com/onevcat/UITestDemo)
+```
+func testEmptyUserNameAndPassword() {
+    XCUIApplication().buttons["Login"].tap()
+
+}
+```
+使用 buttons 来获取一个对 app 的 query 对象，它可以用来寻找 app 内所有被标记为按钮的 UI 元素，其实上它是 XCUIApplication().descendantsMatchingType(.Button) 的简写形式。
+（疑问1：所有的button，这个button树系统怎么维护？什么时候创建的，查找效率高不高？）
+
+除了 descendantsMatchingType 以外，还有仅获取当前层级子元素的 childrenMatchingType 和所有包含的元素的 containingType。我们可以通过级联和结合使用这些方法获取到我们想要的层级的元素。
+(疑问2：这里提到了一个层级的概念，说明刚才的全局查找之外，还有自定义的层级查找，提高效率。这个如何使用？)
+
+
+2.UIAutomation
+1> JS脚本写的测试代码，基于Instrument的Automation控件测试。
+2> 现有封装 ： Appium和Macaca
+3> XCode8之后Instrument不再对它有支持
+4> 童谣依赖Accessibility
+[参考](http://www.cnblogs.com/vowei/archive/2012/08/10/2631949.html)
+
+
+
+3.APPIUM 
+[中文社区](https://testerhome.com/topics/node23)
+基于webdriver的一套移动测试框架。webdriver——网页浏览器的测试框架。
+找了半天终于在GITHUB上看到了官方的[中文文档](https://github.com/appium/appium/tree/master/docs/cn)，真良心👍。
+
+1>基本架构图
+client                                  server                      设备（devices）
+   |    ---发送命令（语言无关）--->            |                          |
+   |                                       |                          |
+   |                                       |翻译                       |
+   |                                       |                          |
+   |                                       |     ---发送到设备执行--->   |
+   |                                       |                          |
+   |                                       |     <---执行完成返回---     |
+   |    <---执行完成返回---                  |                           |
+
+
+2>安装
+①命令行安装
+[mac-os 安装的步骤和坑](https://testerhome.com/topics/1322)
+②桌面图形化界面(只有1.5的版本)
+[Getting Started网址](http://appium.io/getting-started.html)
+[下载页面](https://bitbucket.org/appium/appium.app/downloads/)
+③示例代码
+[示例代码](https://github.com/appium/sample-code)
+
+java junit工程iOSPageObjectTest文件能够成功连接Server。但是上面用的图形化界面不支持XCode8的版本，所以需要重新去官网使用npm下载Appium 1.6版本。下载完再运行，还是一样的问题，在appium的issues列表里找到了关于这个问题的处理，[Issues](https://github.com/appium/appium/issues/6912)。先下载Beta版本，再将XCUITest as automationName，替换SeessionNotCreatedError的内容。
+
+期间使用了npm的taobao镜像,不成功。
+遇到一个文件权限问题 & source-map链接文件的原生找不到的问题。
+求助姚佳梅同学，卸载&重装用公司的源
+npm uninstall -g  appium@beta
+npm install -g appium@beta --registry=http://registry.npm.corp.qunar.com/
+
+加了权限(sudo chmod -R 777 /usr/local/bin)，重装，再次遇到链接问题原身丢失的问题。卸载，也报这个错，所以直接文件路径删除。再重装，卡在了某个Downloading中，挂代理，终于装上了beta版，过了这一关。
+
+
+运行之前的java工程，修改 automation name,platform version,device name。
+```
+capabilities.setCapability(MobileCapabilityType.AUTOMATION_NAME, "XCUITest");
+capabilities.setCapability(MobileCapabilityType.PLATFORM_VERSION, "10.0");
+capabilities.setCapability(MobileCapabilityType.DEVICE_NAME, "iPhone Simulator");
+```
+
+程序跑起来了，成功吊起了模拟器。oh yeah！终于给反馈了，好开心😊
+
+开心没多久，又遇到新问题了
+> [XCUITest] Carthage not found. Install using `brew install carthage`
+没有Carthage，装！
+
+装好之后
+> Original error: Command '/bin/bash Scripts/bootstrap.sh -d' 
+[官方Issues](https://github.com/appium/appium/issues/6759)
+
+> 
+@THIRISANGU please run ./Scripts/bootstrap.sh in the WebDriverAgent folder, which may resulted in sh: webpack: command not found. Then resolved it by npm i -g webpack.
+
+Then please let us know your feedback.
+
+PS：挂代理
+
+
+以上，终于成功运行完成了第一个case！！！好开森
